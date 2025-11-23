@@ -8,7 +8,7 @@ export function requireRole(...allowedRoles: string[]) {
             return res.status(401).json({ error: 'Não autenticado' });
         }
 
-        if (!allowedRoles.includes(user.role)) {
+        if (user.role !== 'ADMIN' && !allowedRoles.includes(user.role)) {
             return res.status(403).json({ error: 'Acesso negado. Permissão insuficiente.' });
         }
 

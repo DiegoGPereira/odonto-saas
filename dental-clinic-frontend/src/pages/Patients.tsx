@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import { Odontogram } from '../components/Odontogram';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { validateCPF, maskCPF, maskPhone } from '../utils/helpers';
@@ -24,6 +27,7 @@ interface PatientFormData {
 }
 
 export const Patients: React.FC = () => {
+    const navigate = useNavigate();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -31,6 +35,8 @@ export const Patients: React.FC = () => {
     const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [isOdontogramOpen, setIsOdontogramOpen] = useState(false);
+    const [selectedPatientForOdontogram, setSelectedPatientForOdontogram] = useState<Patient | null>(null);
     const [formData, setFormData] = useState<PatientFormData>({
         name: '',
         cpf: '',
@@ -191,6 +197,23 @@ export const Patients: React.FC = () => {
                                     <td className="px-6 py-4 text-slate-600">{maskCPF(patient.cpf)}</td>
                                     <td className="px-6 py-4 text-slate-600">{maskPhone(patient.phone)}</td>
                                     <td className="px-6 py-4 text-right space-x-2">
+                                        <button
+                                            onClick={() => navigate(`/medical-records?patientId=${patient.id}`)}
+                                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="Prontuários"
+                                        >
+                                            <FileText size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedPatientForOdontogram(patient);
+                                                setIsOdontogramOpen(true);
+                                            }}
+                                            className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                            title="Odontograma"
+                                        >
+                                            <span className="text-xl">🦷</span>
+                                        </button>
                                         <button
                                             onClick={() => handleOpenModal(patient)}
                                             className="p-2 text-slate-400 hover:text-[var(--color-accent)] hover:bg-blue-50 rounded-lg transition-colors"
@@ -353,6 +376,30 @@ export const Patients: React.FC = () => {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Odontogram Modal */}
+            {isOdontogramOpen && selectedPatientForOdontogram && createPortal(
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800">Odontograma</h2>
+                                <p className="text-slate-500">{selectedPatientForOdontogram.name}</p>
+                            </div>
+                            <button
+                                onClick={() => setIsOdontogramOpen(false)}
+                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <Odontogram patientId={selectedPatientForOdontogram.id} />
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

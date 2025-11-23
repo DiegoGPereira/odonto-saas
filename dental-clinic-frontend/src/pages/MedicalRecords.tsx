@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, FileText, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
@@ -29,6 +31,7 @@ interface MedicalRecordFormData {
 }
 
 export const MedicalRecords: React.FC = () => {
+    const [searchParams] = useSearchParams();
     const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<string>('');
@@ -42,6 +45,14 @@ export const MedicalRecords: React.FC = () => {
     useEffect(() => {
         loadPatients();
     }, []);
+
+    // Check for patientId in URL params
+    useEffect(() => {
+        const patientIdFromUrl = searchParams.get('patientId');
+        if (patientIdFromUrl) {
+            setSelectedPatient(patientIdFromUrl);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (selectedPatient) {
@@ -104,12 +115,10 @@ export const MedicalRecords: React.FC = () => {
                     <h1 className="text-2xl font-bold text-slate-800">Prontuários Médicos</h1>
                     <p className="text-slate-500">Gerencie os prontuários dos pacientes</p>
                 </div>
-                {/* Apenas dentistas podem criar prontuários */}
-                {JSON.parse(localStorage.getItem('@DentalClinic:user') || '{}').role === 'DENTIST' && (
+                {selectedPatient && (
                     <button
                         onClick={handleOpenModal}
-                        disabled={!selectedPatient}
-                        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
                     >
                         <Plus size={20} />
                         <span>Novo Prontuário</span>
@@ -117,19 +126,22 @@ export const MedicalRecords: React.FC = () => {
                 )}
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">Selecione um Paciente</label>
-                <select
-                    value={selectedPatient}
-                    onChange={(e) => setSelectedPatient(e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                >
-                    <option value="">Selecione um paciente</option>
-                    {patients.map(patient => (
-                        <option key={patient.id} value={patient.id}>{patient.name}</option>
-                    ))}
-                </select>
-            </div>
+            {/* Only show patient selector if no patientId in URL */}
+            {!searchParams.get('patientId') && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Selecione um Paciente</label>
+                    <select
+                        value={selectedPatient}
+                        onChange={(e) => setSelectedPatient(e.target.value)}
+                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                    >
+                        <option value="">Selecione um paciente</option>
+                        {patients.map(patient => (
+                            <option key={patient.id} value={patient.id}>{patient.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             {selectedPatient && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
@@ -171,7 +183,7 @@ export const MedicalRecords: React.FC = () => {
             )}
 
             {/* Modal */}
-            {isModalOpen && (
+            {isModalOpen && createPortal(
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl">
                         <div className="flex items-center justify-between p-6 border-b border-slate-100">
@@ -229,7 +241,8 @@ export const MedicalRecords: React.FC = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

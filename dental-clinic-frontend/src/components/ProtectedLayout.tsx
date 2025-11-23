@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, Calendar, FileText, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, LogOut, Shield, DollarSign, ClipboardList } from 'lucide-react';
 
 export const ProtectedLayout: React.FC = () => {
     const { user, token, loading, signOut } = useAuth();
@@ -58,9 +58,13 @@ export const ProtectedLayout: React.FC = () => {
                         <Calendar size={20} />
                         <span>Agendamentos</span>
                     </Link>
-                    <Link to="/medical-records" className={getLinkClasses('/medical-records')}>
-                        <FileText size={20} />
-                        <span>Prontuários</span>
+                    <Link to="/financial" className={getLinkClasses('/financial')}>
+                        <DollarSign size={20} />
+                        <span>Financeiro</span>
+                    </Link>
+                    <Link to="/appointment-requests" className={getLinkClasses('/appointment-requests')}>
+                        <ClipboardList size={20} />
+                        <span>Solicitações</span>
                     </Link>
 
                     {user.role === 'ADMIN' && (

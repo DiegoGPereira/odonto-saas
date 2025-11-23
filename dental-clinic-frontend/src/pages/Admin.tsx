@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Shield } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -191,8 +192,8 @@ export const Admin: React.FC = () => {
                         <button
                             onClick={() => setRoleFilter('ALL')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === 'ALL'
-                                    ? 'bg-[var(--color-accent)] text-white'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                ? 'bg-[var(--color-accent)] text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
                             Todos
@@ -200,8 +201,8 @@ export const Admin: React.FC = () => {
                         <button
                             onClick={() => setRoleFilter('ADMIN')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === 'ADMIN'
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
                             Administradores
@@ -209,8 +210,8 @@ export const Admin: React.FC = () => {
                         <button
                             onClick={() => setRoleFilter('DENTIST')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === 'DENTIST'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
                             Dentistas
@@ -218,8 +219,8 @@ export const Admin: React.FC = () => {
                         <button
                             onClick={() => setRoleFilter('SECRETARY')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${roleFilter === 'SECRETARY'
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                ? 'bg-green-600 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
                             Secretários
@@ -279,7 +280,7 @@ export const Admin: React.FC = () => {
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
+            {isModalOpen && createPortal(
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
                         <div className="flex items-center justify-between p-6 border-b border-slate-100">
@@ -362,7 +363,8 @@ export const Admin: React.FC = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

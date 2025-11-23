@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Calendar as CalendarIcon, X, Filter } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
@@ -219,7 +220,7 @@ export const Appointments: React.FC = () => {
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
+            {isModalOpen && createPortal(
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
                         <div className="flex items-center justify-between p-6 border-b border-slate-100">
@@ -301,7 +302,8 @@ export const Appointments: React.FC = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -24,6 +24,7 @@ model User {
 
   appointments  Appointment[]
   medicalRecords MedicalRecord[]
+  transactions  Transaction[]
 
   @@map("users")
 }
@@ -41,6 +42,8 @@ model Patient {
 
   appointments  Appointment[]
   medicalRecords MedicalRecord[]
+  teeth         Tooth[]
+  transactions  Transaction[]
 
   @@map("patients")
 }
@@ -68,6 +71,9 @@ model Appointment {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
+  medicalRecords MedicalRecord[]
+  transactions   Transaction[]
+
   @@map("appointments")
 }
 
@@ -82,5 +88,61 @@ model MedicalRecord {
   dentistId   String
   dentist     User      @relation(fields: [dentistId], references: [id])
 
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+
   @@map("medical_records")
+}
+
+model Tooth {
+  id          String    @id @default(uuid())
+  number      Int
+  status      String    // HEALTHY, CAVITY, RESTORED, MISSING, CANAL, PROTHESIS
+  notes       String?
+  
+  patientId   String
+  patient     Patient   @relation(fields: [patientId], references: [id])
+
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([patientId, number])
+  @@map("teeth")
+}
+
+model Transaction {
+  id          String    @id @default(uuid())
+  type        String    // INCOME, EXPENSE
+  category    String    // CONSULTATION, PROCEDURE, SALARY, RENT, SUPPLIES, etc
+  amount      Float
+  description String
+  date        DateTime  @default(now())
+  status      String    // PENDING, PAID, CANCELED
+  
+  patientId   String?
+  patient     Patient?  @relation(fields: [patientId], references: [id])
+  
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("transactions")
+}
+
+model PublicAppointmentRequest {
+  id              String    @id @default(uuid())
+  name            String
+  phone           String
+  email           String?
+  preferredDate   DateTime
+  reason          String?
+  status          String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  createdAt       DateTime  @default(now())
+  
+  @@map("public_appointment_requests")
 }
