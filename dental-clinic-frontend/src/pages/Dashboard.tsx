@@ -117,25 +117,25 @@ export const Dashboard: React.FC = () => {
                     title="Total de Pacientes"
                     value={stats.totalPatients.toString()}
                     icon={<Users size={24} />}
-                    color="bg-blue-500"
+                    color="bg-primary"
                 />
                 <StatCard
                     title="Agendamentos Hoje"
                     value={stats.todayAppointments.toString()}
                     icon={<Calendar size={24} />}
-                    color="bg-purple-500"
+                    color="bg-accent"
                 />
                 <StatCard
                     title="Total Agendamentos"
                     value={stats.totalAppointments.toString()}
                     icon={<Activity size={24} />}
-                    color="bg-green-500"
+                    color="bg-secondary"
                 />
                 <StatCard
                     title="Prontuários"
                     value={stats.totalMedicalRecords.toString()}
                     icon={<FileText size={24} />}
-                    color="bg-orange-500"
+                    color="bg-teal-600"
                 />
             </div>
 

@@ -7,9 +7,11 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#0f172a',
-                secondary: '#334155',
-                accent: '#0ea5e9',
+                primary: 'var(--color-primary)',
+                secondary: 'var(--color-secondary)',
+                accent: 'var(--color-accent)',
+                background: 'var(--color-background)',
+                surface: 'var(--color-surface)',
             },
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],

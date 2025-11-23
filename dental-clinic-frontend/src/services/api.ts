@@ -25,6 +25,11 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            // Não redirecionar se for erro no próprio login
+            if (error.config.url?.includes('/auth/login')) {
+                return Promise.reject(error);
+            }
+
             // Token inválido ou expirado
             localStorage.removeItem('@DentalClinic:token');
             localStorage.removeItem('@DentalClinic:user');

@@ -30,19 +30,19 @@ export const ProtectedLayout: React.FC = () => {
     };
 
     const getLinkClasses = (path: string) => {
-        return `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive(path)
-            ? 'bg-[var(--color-accent)] text-white'
-            : 'text-slate-300 hover:bg-[var(--color-secondary)]'
+        return `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive(path)
+            ? 'bg-white/10 text-white shadow-lg border border-white/5'
+            : 'text-teal-100 hover:bg-white/5 hover:text-white'
             }`;
     };
 
     return (
         <div className="flex h-screen bg-[var(--color-background)]">
             {/* Sidebar */}
-            <aside className="w-64 bg-[var(--color-primary)] text-white flex flex-col">
-                <div className="p-6 border-b border-slate-700">
-                    <h1 className="text-xl font-bold">Clínica Odontológica</h1>
-                    <p className="text-xs text-slate-400">Premium Care</p>
+            <aside className="w-64 bg-primary text-white flex flex-col shadow-xl z-10">
+                <div className="p-6 border-b border-white/10">
+                    <h1 className="text-xl font-bold tracking-tight">Clínica Odontológica</h1>
+                    <p className="text-xs text-teal-200 mt-1">Premium Care</p>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2">
@@ -71,19 +71,19 @@ export const ProtectedLayout: React.FC = () => {
                     )}
                 </nav>
 
-                <div className="p-4 border-t border-slate-700">
-                    <div className="flex items-center gap-3 px-4 py-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-[var(--color-accent)] flex items-center justify-center font-bold">
+                <div className="p-4 border-t border-white/10">
+                    <div className="flex items-center gap-3 px-4 py-3 mb-2 bg-teal-800/50 rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center font-bold text-teal-900">
                             {user.name.charAt(0)}
                         </div>
                         <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-medium truncate">{user.name}</p>
-                            <p className="text-xs text-slate-400 truncate">{user.role}</p>
+                            <p className="text-sm font-medium truncate text-white">{user.name}</p>
+                            <p className="text-xs text-teal-200 truncate">{user.role}</p>
                         </div>
                     </div>
                     <button
                         onClick={signOut}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 rounded-lg transition-colors"
                     >
                         <LogOut size={16} />
                         <span>Sair</span>
