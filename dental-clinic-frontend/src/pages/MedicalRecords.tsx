@@ -104,14 +104,17 @@ export const MedicalRecords: React.FC = () => {
                     <h1 className="text-2xl font-bold text-slate-800">Prontuários Médicos</h1>
                     <p className="text-slate-500">Gerencie os prontuários dos pacientes</p>
                 </div>
-                <button
-                    onClick={handleOpenModal}
-                    disabled={!selectedPatient}
-                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <Plus size={20} />
-                    <span>Novo Prontuário</span>
-                </button>
+                {/* Apenas dentistas podem criar prontuários */}
+                {JSON.parse(localStorage.getItem('@DentalClinic:user') || '{}').role === 'DENTIST' && (
+                    <button
+                        onClick={handleOpenModal}
+                        disabled={!selectedPatient}
+                        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Plus size={20} />
+                        <span>Novo Prontuário</span>
+                    </button>
+                )}
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
