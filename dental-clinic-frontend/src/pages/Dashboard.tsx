@@ -72,17 +72,18 @@ export const Dashboard: React.FC = () => {
         }
     };
 
+    const { user } = useAuth();
+
     const loadRecentAppointments = async () => {
         try {
             const { data } = await api.get('/appointments');
-            const { user } = useAuth();
 
             let filtered = data;
 
             // Filter based on user role
             if (user?.role === 'DENTIST') {
                 // Dentists see only their appointments
-                filtered = data.filter((apt: any) => apt.dentistId === user.id);
+                filtered = data.filter((apt: any) => apt.dentistId === user.id && (apt.status === 'AWAITING_RECEPTION' || apt.status === 'SCHEDULED' || apt.status === 'IN_PROGRESS'));
             } else if (user?.role === 'SECRETARY') {
                 // Secretaries see AWAITING_RECEPTION, SCHEDULED, and IN_PROGRESS
                 filtered = data.filter((apt: any) =>
