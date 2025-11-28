@@ -14,7 +14,8 @@ export class AppointmentController {
     }
 
     async findAll(req: Request, res: Response) {
-        const appointments = await appointmentService.findAll();
+        const user = (req as any).user;
+        const appointments = await appointmentService.findAll(user.id, user.role);
         return res.json(appointments);
     }
 

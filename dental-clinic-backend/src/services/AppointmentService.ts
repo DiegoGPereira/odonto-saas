@@ -47,8 +47,15 @@ export class AppointmentService {
         return appointment;
     }
 
-    async findAll() {
+    async findAll(userId?: string, role?: string) {
+        const where: any = {};
+
+        if (role === 'DENTIST' && userId) {
+            where.dentistId = userId;
+        }
+
         return prisma.appointment.findMany({
+            where,
             include: {
                 patient: { select: { name: true } },
                 dentist: { select: { name: true } },

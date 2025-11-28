@@ -17,7 +17,7 @@ Backend para sistema de clínica odontológica desenvolvido em Node.js, TypeScri
 2.  **Configure o Banco de Dados:**
     Inicie o container do PostgreSQL:
     ```bash
-    docker-compose up -d
+    docker compose up -d
     ```
 
 3.  **Configure as Variáveis de Ambiente:**
@@ -26,9 +26,25 @@ Backend para sistema de clínica odontológica desenvolvido em Node.js, TypeScri
     cp .env.example .env
     ```
 
-4.  **Execute as Migrations do Prisma:**
+4. **Instale as dependências do Prisma:**
+    ```bash
+    npm install prisma --save-dev
+    npm install @prisma/client
+    ```
+
+5.  **Execute as Migrations do Prisma:**
     ```bash
     npx prisma migrate dev --name init
+    ```
+
+6. **Gere as classes do Prisma:**
+    ```bash
+    npx prisma generate
+    ```
+
+7. **Execute o Script de Inicialização:**
+    ```bash
+    sudo docker exec -i dental_clinic_db psql -U postgres -d dental_clinic < script.sql
     ```
 
 ## Executando o Servidor
