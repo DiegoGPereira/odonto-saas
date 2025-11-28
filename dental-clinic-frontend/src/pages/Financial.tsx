@@ -39,17 +39,16 @@ interface Patient {
     name: string;
 }
 
+interface Procedure {
+    id: string;
+    name: string;
+    price: number;
+    category: string;
+}
+
 const TRANSACTION_TYPES = [
     { value: 'INCOME', label: 'Receita', color: 'text-green-600' },
     { value: 'EXPENSE', label: 'Despesa', color: 'text-red-600' }
-];
-
-const INCOME_CATEGORIES = [
-    { value: 'CONSULTATION', label: 'Consulta' },
-    { value: 'PROCEDURE', label: 'Procedimento' },
-    { value: 'CLEANING', label: 'Limpeza' },
-    { value: 'ORTHODONTICS', label: 'Ortodontia' },
-    { value: 'OTHER', label: 'Outro' }
 ];
 
 const EXPENSE_CATEGORIES = [
@@ -77,13 +76,15 @@ export const Financial: React.FC = () => {
         totalTransactions: 0
     });
     const [patients, setPatients] = useState<Patient[]>([]);
+    const [procedures, setProcedures] = useState<Procedure[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [typeFilter, setTypeFilter] = useState<string>('ALL');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
     const [formData, setFormData] = useState<TransactionFormData>({
         type: 'INCOME',
-        category: 'CONSULTATION',
+        category: '',
         amount: '',
         description: '',
         date: new Date().toISOString().split('T')[0],
@@ -95,6 +96,7 @@ export const Financial: React.FC = () => {
         loadTransactions();
         loadSummary();
         loadPatients();
+        loadProcedures();
     }, [typeFilter, statusFilter]);
 
     const loadTransactions = async () => {
@@ -125,6 +127,15 @@ export const Financial: React.FC = () => {
             setPatients(data);
         } catch (err) {
             console.error('Error loading patients:', err);
+        }
+    };
+
+    const loadProcedures = async () => {
+        try {
+            const { data } = await api.get('/procedures');
+            setProcedures(data);
+        } catch (err) {
+            console.error('Error loading procedures:', err);
         }
     };
 
@@ -198,6 +209,17 @@ export const Financial: React.FC = () => {
         }
     };
 
+    const handleProcedureChange = (procedureId: string) => {
+        const procedure = procedures.find(p => p.id === procedureId);
+        if (procedure) {
+            setFormData(prev => ({
+                ...prev,
+                amount: procedure.price.toString(),
+                description: procedure.name // Optional: auto-fill description too
+            }));
+        }
+    };
+
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', {
             style: 'currency',
@@ -214,11 +236,26 @@ export const Financial: React.FC = () => {
     };
 
     const getCategoryLabel = (category: string, type: string) => {
-        const categories = type === 'INCOME' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-        return categories.find(c => c.value === category)?.label || category;
+        if (type === 'INCOME') {
+            // For income, try to find in procedures first
+            const procedure = procedures.find(p => p.category === category);
+            if (procedure) return procedure.category;
+        }
+        // For expenses, use predefined categories
+        return EXPENSE_CATEGORIES.find(c => c.value === category)?.label || category;
     };
 
-    const currentCategories = formData.type === 'INCOME' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    // Get unique categories from procedures for INCOME
+    const incomeCategories = Array.from(new Set(procedures.map(p => p.category)));
+
+    // Get filtered procedures based on selected category
+    const filteredProcedures = selectedCategory
+        ? procedures.filter(p => p.category === selectedCategory)
+        : procedures;
+
+    const currentCategories = formData.type === 'INCOME'
+        ? [...incomeCategories.map(cat => ({ value: cat, label: cat })), { value: 'Outros', label: 'Outros' }]
+        : EXPENSE_CATEGORIES;
 
     return (
         <div className="space-y-6">
@@ -408,11 +445,14 @@ export const Financial: React.FC = () => {
                                     <select
                                         required
                                         value={formData.type}
-                                        onChange={(e) => setFormData({
-                                            ...formData,
-                                            type: e.target.value,
-                                            category: e.target.value === 'INCOME' ? 'CONSULTATION' : 'SALARY'
-                                        })}
+                                        onChange={(e) => {
+                                            setFormData({
+                                                ...formData,
+                                                type: e.target.value,
+                                                category: ''
+                                            });
+                                            setSelectedCategory('');
+                                        }}
                                         className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                                     >
                                         {TRANSACTION_TYPES.map(type => (
@@ -426,15 +466,35 @@ export const Financial: React.FC = () => {
                                     <select
                                         required
                                         value={formData.category}
-                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, category: e.target.value });
+                                            setSelectedCategory(e.target.value);
+                                        }}
                                         className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                                     >
+                                        <option value="">Selecione uma categoria</option>
                                         {currentCategories.map(cat => (
                                             <option key={cat.value} value={cat.value}>{cat.label}</option>
                                         ))}
                                     </select>
                                 </div>
                             </div>
+
+                            {/* Procedure Selection - Show for all INCOME transactions with a category selected, except 'Outros' */}
+                            {formData.type === 'INCOME' && formData.category && formData.category !== 'Outros' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Selecionar Procedimento</label>
+                                    <select
+                                        onChange={(e) => handleProcedureChange(e.target.value)}
+                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {filteredProcedures.map(proc => (
+                                            <option key={proc.id} value={proc.id}>{proc.name} - {formatCurrency(proc.price)}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

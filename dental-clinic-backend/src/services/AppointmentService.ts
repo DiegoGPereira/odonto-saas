@@ -72,7 +72,7 @@ export class AppointmentService {
         });
     }
 
-    async updateStatus(id: string, status: 'CONFIRMED' | 'COMPLETED' | 'CANCELED' | 'NO_SHOW') {
+    async updateStatus(id: string, status: 'AWAITING_RECEPTION' | 'SCHEDULED' | 'IN_PROGRESS' | 'CONFIRMED' | 'COMPLETED' | 'CANCELED' | 'NO_SHOW') {
         return prisma.appointment.update({
             where: { id },
             data: { status },

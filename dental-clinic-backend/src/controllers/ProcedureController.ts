@@ -1,14 +1,13 @@
 import { Request, Response } from 'express';
-import { UserService } from '../services/UserService';
+import { ProcedureService } from '../services/ProcedureService';
 
-const userService = new UserService();
+const procedureService = new ProcedureService();
 
-export class UserController {
+export class ProcedureController {
     async findAll(req: Request, res: Response) {
         try {
-            const { role } = req.query;
-            const users = await userService.findAll(role as string);
-            return res.json(users);
+            const procedures = await procedureService.findAll();
+            return res.json(procedures);
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
         }
@@ -17,8 +16,8 @@ export class UserController {
     async findById(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const user = await userService.findById(id);
-            return res.json(user);
+            const procedure = await procedureService.findById(id);
+            return res.json(procedure);
         } catch (error: any) {
             return res.status(404).json({ error: error.message });
         }
@@ -26,8 +25,8 @@ export class UserController {
 
     async create(req: Request, res: Response) {
         try {
-            const user = await userService.create(req.body);
-            return res.status(201).json(user);
+            const procedure = await procedureService.create(req.body);
+            return res.status(201).json(procedure);
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
         }
@@ -36,8 +35,8 @@ export class UserController {
     async update(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const user = await userService.update(id, req.body);
-            return res.json(user);
+            const procedure = await procedureService.update(id, req.body);
+            return res.json(procedure);
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
         }
@@ -46,8 +45,8 @@ export class UserController {
     async delete(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const result = await userService.delete(id);
-            return res.json(result);
+            await procedureService.delete(id);
+            return res.status(204).send();
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
         }

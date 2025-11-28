@@ -6,14 +6,16 @@ import { requireRole } from '../middlewares/roleMiddleware';
 const router = Router();
 const userController = new UserController();
 
-// All routes require authentication and ADMIN role
+// All routes require authentication
 router.use(authMiddleware);
-router.use(requireRole('ADMIN'));
 
+// Allow listing users for all authenticated users (needed for appointment creation)
 router.get('/', userController.findAll);
-router.get('/:id', userController.findById);
-router.post('/', userController.create);
-router.put('/:id', userController.update);
-router.delete('/:id', userController.delete);
+
+// Admin only routes
+router.get('/:id', requireRole('ADMIN'), userController.findById);
+router.post('/', requireRole('ADMIN'), userController.create);
+router.put('/:id', requireRole('ADMIN'), userController.update);
+router.delete('/:id', requireRole('ADMIN'), userController.delete);
 
 export { router as userRoutes };

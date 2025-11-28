@@ -17,8 +17,14 @@ const updateUserSchema = z.object({
 });
 
 export class UserService {
-    async findAll() {
+    async findAll(role?: string) {
+        const where: any = {};
+        if (role) {
+            where.role = role;
+        }
+
         return prisma.user.findMany({
+            where,
             select: {
                 id: true,
                 name: true,

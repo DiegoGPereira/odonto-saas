@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, Calendar, FileText, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { formatDateTime } from '../utils/helpers';
 
@@ -74,7 +75,25 @@ export const Dashboard: React.FC = () => {
     const loadRecentAppointments = async () => {
         try {
             const { data } = await api.get('/appointments');
-            const sorted = data
+            const { user } = useAuth();
+
+            let filtered = data;
+
+            // Filter based on user role
+            if (user?.role === 'DENTIST') {
+                // Dentists see only their appointments
+                filtered = data.filter((apt: any) => apt.dentistId === user.id);
+            } else if (user?.role === 'SECRETARY') {
+                // Secretaries see AWAITING_RECEPTION, SCHEDULED, and IN_PROGRESS
+                filtered = data.filter((apt: any) =>
+                    apt.status === 'AWAITING_RECEPTION' ||
+                    apt.status === 'SCHEDULED' ||
+                    apt.status === 'IN_PROGRESS'
+                );
+            }
+            // ADMIN sees all appointments (no filter)
+
+            const sorted = filtered
                 .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .slice(0, 5);
             setRecentAppointments(sorted);
@@ -85,7 +104,9 @@ export const Dashboard: React.FC = () => {
 
     const getStatusColor = (status: string) => {
         const colors = {
+            AWAITING_RECEPTION: 'bg-yellow-100 text-yellow-700',
             SCHEDULED: 'bg-blue-100 text-blue-700',
+            IN_PROGRESS: 'bg-purple-100 text-purple-700',
             CONFIRMED: 'bg-green-100 text-green-700',
             COMPLETED: 'bg-gray-100 text-gray-700',
             CANCELED: 'bg-red-100 text-red-700',
@@ -96,7 +117,9 @@ export const Dashboard: React.FC = () => {
 
     const getStatusLabel = (status: string) => {
         const labels = {
+            AWAITING_RECEPTION: 'Aguardando Recepção',
             SCHEDULED: 'Agendado',
+            IN_PROGRESS: 'Em Atendimento',
             CONFIRMED: 'Confirmado',
             COMPLETED: 'Concluído',
             CANCELED: 'Cancelado',

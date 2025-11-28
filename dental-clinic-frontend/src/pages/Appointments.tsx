@@ -7,7 +7,7 @@ import api from '../services/api';
 interface Appointment {
     id: string;
     date: string;
-    status: 'SCHEDULED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELED' | 'NO_SHOW';
+    status: 'AWAITING_RECEPTION' | 'SCHEDULED' | 'IN_PROGRESS' | 'CONFIRMED' | 'COMPLETED' | 'CANCELED' | 'NO_SHOW';
     notes: string | null;
     patient: {
         id: string;
@@ -70,21 +70,24 @@ export const Appointments: React.FC = () => {
 
     const loadDentists = async () => {
         try {
-            // Get the current user (admin) as dentist for now
-            // In a real app, you'd have a /users endpoint filtered by role=DENTIST
-            const currentUser = JSON.parse(localStorage.getItem('@DentalClinic:user') || '{}');
-            setDentists([{ id: currentUser.id, name: currentUser.name }]);
+            const { data } = await api.get('/users', {
+                params: { role: 'DENTIST' }
+            });
+            setDentists(data);
         } catch (err) {
             console.error('Error loading dentists:', err);
+            toast.error('Erro ao carregar lista de dentistas');
         }
     };
 
     const handleOpenModal = () => {
         const currentUser = JSON.parse(localStorage.getItem('@DentalClinic:user') || '{}');
+        const isDentist = currentUser.role === 'DENTIST';
+
         setFormData({
             date: '',
             patientId: '',
-            dentistId: currentUser.id || '', // Auto-select current user as dentist
+            dentistId: isDentist ? currentUser.id : '',
             notes: '',
         });
         setIsModalOpen(true);
@@ -118,7 +121,9 @@ export const Appointments: React.FC = () => {
 
     const getStatusColor = (status: string) => {
         const colors = {
+            AWAITING_RECEPTION: 'bg-yellow-100 text-yellow-800',
             SCHEDULED: 'bg-blue-100 text-blue-800',
+            IN_PROGRESS: 'bg-purple-100 text-purple-800',
             CONFIRMED: 'bg-green-100 text-green-800',
             COMPLETED: 'bg-gray-100 text-gray-800',
             CANCELED: 'bg-red-100 text-red-800',
@@ -202,7 +207,9 @@ export const Appointments: React.FC = () => {
                                             onChange={(e) => handleStatusChange(appointment.id, e.target.value)}
                                             className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}
                                         >
+                                            <option value="AWAITING_RECEPTION">Aguardando Recepção</option>
                                             <option value="SCHEDULED">Agendado</option>
+                                            <option value="IN_PROGRESS">Em Atendimento</option>
                                             <option value="CONFIRMED">Confirmado</option>
                                             <option value="COMPLETED">Concluído</option>
                                             <option value="CANCELED">Cancelado</option>
@@ -255,7 +262,8 @@ export const Appointments: React.FC = () => {
                                     required
                                     value={formData.dentistId}
                                     onChange={(e) => setFormData({ ...formData, dentistId: e.target.value })}
-                                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:bg-slate-100 disabled:text-slate-500"
+                                    disabled={JSON.parse(localStorage.getItem('@DentalClinic:user') || '{}').role === 'DENTIST'}
                                 >
                                     <option value="">Selecione um dentista</option>
                                     {dentists.map(dentist => (

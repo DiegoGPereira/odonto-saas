@@ -23,6 +23,8 @@ import { odontogramRoutes } from './routes/odontogram.routes';
 import transactionRoutes from './routes/transaction.routes';
 import publicRoutes from './routes/public.routes';
 
+import { procedureRoutes } from './routes/procedure.routes';
+
 // Public routes MUST come first (before protected routes)
 app.use(publicRoutes);
 
@@ -32,6 +34,7 @@ app.use('/appointments', appointmentRoutes);
 app.use('/medical-records', medicalRecordRoutes);
 app.use('/users', userRoutes);
 app.use('/odontogram', odontogramRoutes);
+app.use('/procedures', procedureRoutes);
 app.use(transactionRoutes);
 
 export { app };
