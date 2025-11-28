@@ -9,6 +9,7 @@ const odontogramController = new OdontogramController();
 router.use(authMiddleware);
 
 router.get('/:patientId', odontogramController.getPatientOdontogram);
+router.get('/:patientId/tooth/:toothNumber/history', odontogramController.getToothHistory);
 router.put('/:patientId/tooth', requireRole('DENTIST'), odontogramController.updateTooth);
 
 export { router as odontogramRoutes };

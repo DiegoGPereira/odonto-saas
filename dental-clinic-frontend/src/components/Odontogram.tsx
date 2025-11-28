@@ -7,6 +7,33 @@ interface Tooth {
     number: number;
     status: string;
     notes?: string;
+    lastProcedure?: Procedure;
+}
+
+interface Procedure {
+    id: string;
+    name: string;
+    category: string;
+    price: number;
+}
+
+interface ToothHistory {
+    id: string;
+    toothNumber: number;
+    previousStatus?: string;
+    newStatus: string;
+    notes?: string;
+    procedure?: Procedure;
+    amount?: number;
+    createdAt: string;
+    dentist: {
+        id: string;
+        name: string;
+    };
+    transaction?: {
+        id: string;
+        status: string;
+    };
 }
 
 interface OdontogramProps {
@@ -63,11 +90,17 @@ const TEXT_COLORS: Record<string, string> = {
 export const Odontogram: React.FC<OdontogramProps> = ({ patientId }) => {
     const [teeth, setTeeth] = useState<Tooth[]>([]);
     const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
+    const [selectedStatus, setSelectedStatus] = useState<string>('');
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
+    const [procedures, setProcedures] = useState<Procedure[]>([]);
+    const [selectedProcedure, setSelectedProcedure] = useState<string>('');
+    const [procedureAmount, setProcedureAmount] = useState<number>(0);
+    const [toothHistory, setToothHistory] = useState<ToothHistory[]>([]);
 
     useEffect(() => {
         loadOdontogram();
+        loadProcedures();
     }, [patientId]);
 
     const loadOdontogram = async () => {
@@ -80,26 +113,64 @@ export const Odontogram: React.FC<OdontogramProps> = ({ patientId }) => {
         }
     };
 
-    const handleToothClick = (number: number) => {
-        const tooth = teeth.find(t => t.number === number);
-        setSelectedTooth(number);
-        setNotes(tooth?.notes || '');
+    const loadProcedures = async () => {
+        try {
+            const { data } = await api.get('/procedures');
+            setProcedures(data);
+        } catch (err) {
+            console.error('Error loading procedures:', err);
+        }
     };
 
-    const handleUpdateStatus = async (status: string) => {
+    const handleToothClick = async (number: number) => {
+        const tooth = teeth.find(t => t.number === number);
+        setSelectedTooth(number);
+        setSelectedStatus(tooth?.status || 'HEALTHY');
+        setNotes(tooth?.notes || '');
+        setSelectedProcedure('');
+        setProcedureAmount(0);
+
+        // Load tooth history
+        try {
+            const { data } = await api.get(`/odontogram/${patientId}/tooth/${number}/history`);
+            setToothHistory(data);
+        } catch (err) {
+            console.error('Error loading tooth history:', err);
+            setToothHistory([]);
+        }
+    };
+
+    const handleProcedureChange = (procedureId: string) => {
+        setSelectedProcedure(procedureId);
+        if (procedureId) {
+            const procedure = procedures.find(p => p.id === procedureId);
+            if (procedure) {
+                setProcedureAmount(procedure.price);
+            }
+        } else {
+            setProcedureAmount(0);
+        }
+    };
+
+    const handleSave = async () => {
         if (!selectedTooth) return;
 
         setLoading(true);
         try {
             await api.put(`/odontogram/${patientId}/tooth`, {
                 number: selectedTooth,
-                status,
-                notes
+                status: selectedStatus,
+                notes,
+                procedureId: selectedProcedure || undefined,
+                amount: procedureAmount > 0 ? procedureAmount : undefined
             });
 
             await loadOdontogram();
             toast.success('Dente atualizado com sucesso');
-            setSelectedTooth(null);
+
+            // Reload history
+            const { data } = await api.get(`/odontogram/${patientId}/tooth/${selectedTooth}/history`);
+            setToothHistory(data);
         } catch (err) {
             console.error('Error updating tooth:', err);
             toast.error('Erro ao atualizar dente');
@@ -180,7 +251,7 @@ export const Odontogram: React.FC<OdontogramProps> = ({ patientId }) => {
 
             {/* Controls */}
             {selectedTooth && (
-                <div className="w-full lg:w-80 bg-white p-6 rounded-xl shadow-sm border border-slate-100 h-fit">
+                <div className="w-full lg:w-96 bg-white p-6 rounded-xl shadow-sm border border-slate-100 h-fit">
                     <h4 className="text-lg font-semibold text-slate-800 mb-4">
                         Dente {selectedTooth}
                     </h4>
@@ -189,28 +260,90 @@ export const Odontogram: React.FC<OdontogramProps> = ({ patientId }) => {
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Estado</label>
                             <div className="grid grid-cols-2 gap-2">
-                                {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => handleUpdateStatus(key)}
-                                        disabled={loading}
-                                        className={`px-3 py-2 text-sm rounded-lg border transition-all ${teeth.find(t => t.number === selectedTooth)?.status === key
-                                            ? 'bg-primary text-white border-primary'
-                                            : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                                            }`}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
+                                {Object.entries(STATUS_LABELS).map(([key, label]) => {
+                                    const isSelected = selectedStatus === key;
+                                    let colorClass = 'border-slate-200 hover:bg-slate-50 text-slate-700';
+
+                                    if (isSelected) {
+                                        const bgColor = BG_COLORS[key];
+                                        // Adjust text color for light backgrounds
+                                        if (key === 'HEALTHY') {
+                                            colorClass = `${bgColor} text-slate-700 border-slate-300 ring-1 ring-slate-300`;
+                                        } else if (key === 'PROTHESIS') {
+                                            colorClass = `${bgColor} text-slate-800 border-yellow-500`;
+                                        } else {
+                                            colorClass = `${bgColor} text-white border-transparent`;
+                                        }
+                                    }
+
+                                    return (
+                                        <button
+                                            key={key}
+                                            onClick={() => setSelectedStatus(key)}
+                                            disabled={loading}
+                                            className={`px-3 py-2 text-sm rounded-lg border transition-all ${colorClass}`}
+                                        >
+                                            {label}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Procedimento (Opcional)
+                            </label>
+                            <select
+                                value={selectedProcedure}
+                                onChange={(e) => handleProcedureChange(e.target.value)}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Nenhum</option>
+                                {procedures.map(proc => (
+                                    <option key={proc.id} value={proc.id}>
+                                        {proc.name} - R$ {proc.price.toFixed(2)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {selectedProcedure && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Categoria
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={procedures.find(p => p.id === selectedProcedure)?.category || ''}
+                                        readOnly
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Valor
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={procedureAmount}
+                                        onChange={(e) => setProcedureAmount(Number(e.target.value))}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        step="0.01"
+                                        min="0"
+                                    />
+                                </div>
+                            </>
+                        )}
 
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Observações</label>
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 rows={3}
                                 placeholder="Adicione notas sobre o dente..."
                             />
@@ -223,7 +356,63 @@ export const Odontogram: React.FC<OdontogramProps> = ({ patientId }) => {
                             >
                                 Cancelar
                             </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={loading}
+                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Salvando...' : 'Salvar'}
+                            </button>
                         </div>
+
+                        {/* Histórico */}
+                        {toothHistory.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-slate-200">
+                                <h5 className="text-sm font-semibold text-slate-800 mb-3">
+                                    Histórico de Alterações
+                                </h5>
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {toothHistory.map(history => (
+                                        <div key={history.id} className="text-sm bg-slate-50 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className="font-medium text-slate-700">
+                                                    {history.previousStatus ?
+                                                        `${STATUS_LABELS[history.previousStatus]} → ` : ''}
+                                                    {STATUS_LABELS[history.newStatus]}
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    {new Date(history.createdAt).toLocaleDateString('pt-BR')}
+                                                </span>
+                                            </div>
+                                            {history.procedure && (
+                                                <div className="text-xs text-slate-600">
+                                                    Procedimento: {history.procedure.name}
+                                                    {history.amount && ` - R$ ${history.amount.toFixed(2)}`}
+                                                </div>
+                                            )}
+                                            {history.notes && (
+                                                <div className="text-xs text-slate-600 mt-1">
+                                                    {history.notes}
+                                                </div>
+                                            )}
+                                            <div className="text-xs text-slate-500 mt-1">
+                                                Por: {history.dentist.name}
+                                            </div>
+                                            {history.transaction && (
+                                                <div className="text-xs mt-1">
+                                                    <span className={`px-2 py-0.5 rounded-full ${history.transaction.status === 'PAID'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-yellow-100 text-yellow-700'
+                                                        }`}>
+                                                        {history.transaction.status === 'PAID' ? 'Pago' : 'Pendente'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

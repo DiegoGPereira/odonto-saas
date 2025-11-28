@@ -33,13 +33,18 @@ interface TransactionFilters {
 }
 
 class TransactionService {
-    async getAllTransactions(filters?: TransactionFilters) {
+    async getAllTransactions(filters?: TransactionFilters, userId?: string, userRole?: string) {
         const where: any = {};
 
         if (filters?.type) where.type = filters.type;
         if (filters?.category) where.category = filters.category;
         if (filters?.status) where.status = filters.status;
         if (filters?.patientId) where.patientId = filters.patientId;
+
+        // If user is a dentist, they can only see their own transactions
+        if (userRole === 'DENTIST' && userId) {
+            where.createdById = userId;
+        }
 
         if (filters?.startDate || filters?.endDate) {
             where.date = {};
@@ -101,7 +106,23 @@ class TransactionService {
         });
     }
 
-    async updateTransaction(id: string, data: UpdateTransactionDTO) {
+    async updateTransaction(id: string, data: UpdateTransactionDTO, userId?: string, userRole?: string) {
+        // If user is a dentist, check if they own the transaction
+        if (userRole === 'DENTIST' && userId) {
+            const transaction = await prisma.transaction.findUnique({
+                where: { id },
+                select: { createdById: true }
+            });
+
+            if (!transaction) {
+                throw new Error('Transação não encontrada');
+            }
+
+            if (transaction.createdById !== userId) {
+                throw new Error('Você não tem permissão para editar esta transação');
+            }
+        }
+
         return prisma.transaction.update({
             where: { id },
             data,
@@ -116,19 +137,40 @@ class TransactionService {
         });
     }
 
-    async deleteTransaction(id: string) {
+    async deleteTransaction(id: string, userId?: string, userRole?: string) {
+        // If user is a dentist, check if they own the transaction
+        if (userRole === 'DENTIST' && userId) {
+            const transaction = await prisma.transaction.findUnique({
+                where: { id },
+                select: { createdById: true }
+            });
+
+            if (!transaction) {
+                throw new Error('Transação não encontrada');
+            }
+
+            if (transaction.createdById !== userId) {
+                throw new Error('Você não tem permissão para excluir esta transação');
+            }
+        }
+
         return prisma.transaction.delete({
             where: { id }
         });
     }
 
-    async getFinancialSummary(startDate?: Date, endDate?: Date) {
+    async getFinancialSummary(startDate?: Date, endDate?: Date, userId?: string, userRole?: string) {
         const where: any = {};
 
         if (startDate || endDate) {
             where.date = {};
             if (startDate) where.date.gte = startDate;
             if (endDate) where.date.lte = endDate;
+        }
+
+        // If user is a dentist, filter by their ID
+        if (userRole === 'DENTIST' && userId) {
+            where.createdById = userId;
         }
 
         const transactions = await prisma.transaction.findMany({

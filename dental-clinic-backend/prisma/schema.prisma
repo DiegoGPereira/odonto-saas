@@ -25,6 +25,7 @@ model User {
   appointments  Appointment[]
   medicalRecords MedicalRecord[]
   transactions  Transaction[]
+  toothHistory  ToothHistory[]
 
   @@map("users")
 }
@@ -44,6 +45,7 @@ model Patient {
   medicalRecords MedicalRecord[]
   teeth         Tooth[]
   transactions  Transaction[]
+  toothHistory  ToothHistory[]
 
   @@map("patients")
 }
@@ -102,6 +104,9 @@ model Tooth {
   status      String    // HEALTHY, CAVITY, RESTORED, MISSING, CANAL, PROTHESIS
   notes       String?
   
+  lastProcedureId String?
+  lastProcedure   Procedure? @relation(fields: [lastProcedureId], references: [id])
+  
   patientId   String
   patient     Patient   @relation(fields: [patientId], references: [id])
 
@@ -109,6 +114,32 @@ model Tooth {
 
   @@unique([patientId, number])
   @@map("teeth")
+}
+
+model ToothHistory {
+  id            String    @id @default(uuid())
+  toothNumber   Int
+  previousStatus String?
+  newStatus     String
+  notes         String?
+  
+  procedureId   String?
+  procedure     Procedure? @relation(fields: [procedureId], references: [id])
+  
+  amount        Float?
+  
+  patientId     String
+  patient       Patient   @relation(fields: [patientId], references: [id])
+  
+  dentistId     String
+  dentist       User      @relation(fields: [dentistId], references: [id])
+  
+  transactionId String?   @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  
+  createdAt     DateTime  @default(now())
+  
+  @@map("tooth_history")
 }
 
 model Transaction {
@@ -128,6 +159,8 @@ model Transaction {
   
   createdById String
   createdBy   User      @relation(fields: [createdById], references: [id])
+  
+  toothHistory ToothHistory?
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -156,6 +189,9 @@ model Procedure {
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  teeth        Tooth[]
+  toothHistory ToothHistory[]
 
   @@map("procedures")
 }

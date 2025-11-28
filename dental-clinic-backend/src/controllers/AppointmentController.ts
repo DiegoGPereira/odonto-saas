@@ -21,8 +21,9 @@ export class AppointmentController {
 
     async updateStatus(req: Request, res: Response) {
         try {
+            const user = (req as any).user;
             const { status } = req.body;
-            const appointment = await appointmentService.updateStatus(req.params.id, status);
+            const appointment = await appointmentService.updateStatus(req.params.id, status, user.id, user.role);
             return res.json(appointment);
         } catch (error: any) {
             return res.status(400).json({ error: error.message });

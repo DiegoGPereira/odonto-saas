@@ -17,16 +17,30 @@ export class OdontogramController {
     async updateTooth(req: Request, res: Response) {
         try {
             const { patientId } = req.params;
-            const { number, status, notes } = req.body;
+            const { number, status, notes, procedureId, amount } = req.body;
+            const user = (req as any).user;
 
             const tooth = await odontogramService.updateTooth({
                 patientId,
                 number,
                 status,
-                notes
+                notes,
+                procedureId,
+                amount,
+                dentistId: user.id
             });
 
             return res.json(tooth);
+        } catch (error: any) {
+            return res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getToothHistory(req: Request, res: Response) {
+        try {
+            const { patientId, toothNumber } = req.params;
+            const history = await odontogramService.getToothHistory(patientId, parseInt(toothNumber));
+            return res.json(history);
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
         }

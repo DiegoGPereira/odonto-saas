@@ -66,11 +66,53 @@ npm run dev
 
 ## 👥 Roles e Permissões
 
-O sistema possui três níveis de acesso:
+O sistema possui três níveis de acesso com permissões específicas:
 
-- **ADMIN** - Acesso total, incluindo gerenciamento de usuários
-- **DENTIST** - Gerenciar pacientes, agendamentos e prontuários
-- **SECRETARY** - Gerenciar pacientes e agendamentos
+### Matriz de Permissões
+
+| Funcionalidade | 🔴 ADMIN | 🟢 SECRETARY | 🔵 DENTIST |
+|---|:---:|:---:|:---:|
+| **Usuários** |
+| Criar/editar/deletar usuários | ✅ | ❌ | ❌ |
+| Listar usuários | ✅ | ✅ | ✅ |
+| **Pacientes** |
+| Criar/editar pacientes | ✅ | ✅ | ❌ |
+| Visualizar pacientes | ✅ | ✅ | ✅ |
+| **Agendamentos** |
+| Criar agendamentos | ✅ | ✅ | ❌ |
+| Visualizar agendamentos | ✅ | ✅ | ✅ (apenas próprios) |
+| Atualizar status | ✅ | ✅ | ✅ (apenas próprios) |
+| **Prontuários Médicos** |
+| Criar/editar prontuários | ✅ | ❌ | ✅ |
+| Visualizar prontuários | ✅ | ❌ | ✅ |
+| **Odontogramas** |
+| Criar/editar odontogramas | ✅ | ❌ | ✅ |
+| Visualizar odontogramas | ✅ | ✅ | ✅ |
+| **Transações Financeiras** |
+| Criar/editar/deletar transações | ✅ | ✅ | ✅ (apenas próprias) |
+| Visualizar transações | ✅ | ✅ | ✅ (apenas próprias) |
+| Ver resumo financeiro | ✅ | ✅ | ✅ (apenas próprio) |
+| **Procedimentos** |
+| Criar/editar/deletar procedimentos | ✅ | ❌ | ❌ |
+| Visualizar procedimentos | ✅ | ✅ | ✅ |
+
+### Descrição dos Roles
+
+#### 🔴 ADMIN (Administrador)
+- Acesso total ao sistema
+- Gerencia usuários, procedimentos e todas as funcionalidades
+- Pode visualizar e modificar todos os dados
+
+#### 🟢 SECRETARY (Secretária)
+- Gerencia o fluxo de pacientes e agendamentos
+- Controla as transações financeiras
+- **Não tem acesso** a prontuários médicos (privacidade)
+
+#### 🔵 DENTIST (Dentista)
+- Visualiza apenas seus próprios agendamentos
+- Cria e gerencia prontuários médicos e odontogramas
+- **Não tem acesso** a gestão financeira ou administrativa
+- Pode visualizar pacientes mas não criar/editar
 
 ## 📚 Documentação
 

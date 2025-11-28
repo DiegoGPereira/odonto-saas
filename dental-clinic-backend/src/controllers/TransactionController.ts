@@ -5,6 +5,8 @@ class TransactionController {
     async getAllTransactions(req: Request, res: Response) {
         try {
             const { type, category, status, startDate, endDate, patientId } = req.query;
+            const userId = (req as any).user?.id;
+            const userRole = (req as any).user?.role;
 
             const filters: any = {};
             if (type) filters.type = type as string;
@@ -14,7 +16,7 @@ class TransactionController {
             if (startDate) filters.startDate = new Date(startDate as string);
             if (endDate) filters.endDate = new Date(endDate as string);
 
-            const transactions = await transactionService.getAllTransactions(filters);
+            const transactions = await transactionService.getAllTransactions(filters, userId, userRole);
             return res.json(transactions);
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
@@ -69,6 +71,8 @@ class TransactionController {
         try {
             const { id } = req.params;
             const { type, category, amount, description, date, status, patientId, appointmentId } = req.body;
+            const userId = (req as any).user?.id;
+            const userRole = (req as any).user?.role;
 
             const updateData: any = {};
             if (type !== undefined) updateData.type = type;
@@ -80,7 +84,7 @@ class TransactionController {
             if (patientId !== undefined) updateData.patientId = patientId;
             if (appointmentId !== undefined) updateData.appointmentId = appointmentId;
 
-            const transaction = await transactionService.updateTransaction(id, updateData);
+            const transaction = await transactionService.updateTransaction(id, updateData, userId, userRole);
             return res.json(transaction);
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
@@ -90,7 +94,10 @@ class TransactionController {
     async deleteTransaction(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            await transactionService.deleteTransaction(id);
+            const userId = (req as any).user?.id;
+            const userRole = (req as any).user?.role;
+
+            await transactionService.deleteTransaction(id, userId, userRole);
             return res.status(204).send();
         } catch (error: any) {
             return res.status(400).json({ error: error.message });
@@ -100,10 +107,14 @@ class TransactionController {
     async getFinancialSummary(req: Request, res: Response) {
         try {
             const { startDate, endDate } = req.query;
+            const userId = (req as any).user?.id;
+            const userRole = (req as any).user?.role;
 
             const summary = await transactionService.getFinancialSummary(
                 startDate ? new Date(startDate as string) : undefined,
-                endDate ? new Date(endDate as string) : undefined
+                endDate ? new Date(endDate as string) : undefined,
+                userId,
+                userRole
             );
 
             return res.json(summary);

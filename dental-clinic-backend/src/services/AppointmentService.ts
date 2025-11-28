@@ -72,7 +72,23 @@ export class AppointmentService {
         });
     }
 
-    async updateStatus(id: string, status: 'AWAITING_RECEPTION' | 'SCHEDULED' | 'IN_PROGRESS' | 'CONFIRMED' | 'COMPLETED' | 'CANCELED' | 'NO_SHOW') {
+    async updateStatus(id: string, status: 'AWAITING_RECEPTION' | 'SCHEDULED' | 'IN_PROGRESS' | 'CONFIRMED' | 'COMPLETED' | 'CANCELED' | 'NO_SHOW', userId?: string, userRole?: string) {
+        // If user is DENTIST, verify they own this appointment
+        if (userRole === 'DENTIST' && userId) {
+            const appointment = await prisma.appointment.findUnique({
+                where: { id },
+                select: { dentistId: true }
+            });
+
+            if (!appointment) {
+                throw new Error('Agendamento não encontrado');
+            }
+
+            if (appointment.dentistId !== userId) {
+                throw new Error('Você só pode atualizar seus próprios agendamentos');
+            }
+        }
+
         return prisma.appointment.update({
             where: { id },
             data: { status },
